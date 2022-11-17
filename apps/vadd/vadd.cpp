@@ -8,6 +8,7 @@ void Add(tapa::istream<float_v16>& a,
          tapa::ostream<float_v16>& c, 
          uint64_t n) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
+  #pragma HLS pipeline
     c << (a.read() + b.read());
   }
 }
