@@ -18,10 +18,11 @@ int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, /*remove_flags=*/true);
 
   const uint64_t n = argc > 1 ? atoll(argv[1]) : 1024 * 1024;
-  vector<float> a(n);
-  vector<float> b(n);
-  vector<float> c(n);
-  for (uint64_t i = 0; i < n; ++i) {
+  const uint64_t n_aligned = ((n + 15) / 16) * 16;
+  vector<float> a(n_aligned);
+  vector<float> b(n_aligned);
+  vector<float> c(n_aligned);
+  for (uint64_t i = 0; i < n_aligned; ++i) {
     a[i] = static_cast<float>(i);
     b[i] = static_cast<float>(i) * 2;
     c[i] = 0.f;
