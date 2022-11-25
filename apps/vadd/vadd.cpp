@@ -11,13 +11,12 @@ void Add(tapa::istream<float_v16>& a,
   float_v16 a_chunk, b_chunk;
   printf("%d", a.empty());
   printf("%d", b.empty()); 
-  printf("%d", c.full()); 
+  printf("%d\n", c.full()); 
   // while (!a.empty() && !b.empty() && !c.full()) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {  
-    printf("\n");
-    printf("%d", a.try_read(a_chunk));
-    printf("%d", b.try_read(b_chunk));
-    printf("%d", c.try_write(a_chunk + b_chunk));
+    printf("%d", a.try_read(a_chunk) && b.try_read(b_chunk) && c.try_write(a_chunk + b_chunk));
+    // printf("%d", b.try_read(b_chunk));
+    // printf("%d", c.try_write(a_chunk + b_chunk));
   }
   // while (a.try_read(a_chunk) && b.try_read(b_chunk)) {
   //   c << (a_chunk + b_chunk);
