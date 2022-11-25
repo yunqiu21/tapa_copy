@@ -12,16 +12,16 @@ void Add(tapa::istream<float_v16>& a,
   // bool a_eot = false; 
   // bool b_eot = false; 
   // while (!a_eot && !b_eot && !c.full()) {
-  // // for (uint64_t i = 0; i < (n + 15) / 16; ++i) {      
-  //   a.try_read(a_chunk);
-  //   b.try_read(b_chunk);
-  //   c.try_write(a_chunk + b_chunk);
+  for (uint64_t i = 0; i < (n + 15) / 16; ++i) {      
+    a.try_read(a_chunk);
+    b.try_read(b_chunk);
+    c.try_write(a_chunk + b_chunk);
   //   a.try_eot(a_eot); 
   //   b.try_eot(b_eot); 
   //   // printf("%d", b.try_read(b_chunk));
   //   // printf("%d", c.try_write(a_chunk + b_chunk));
-  // }
-  while (a.try_read(a_chunk) && b.try_read(b_chunk) && c.try_write(a_chunk + b_chunk)) {}
+  }
+  // while (a.try_read(a_chunk) && b.try_read(b_chunk) && c.try_write(a_chunk + b_chunk)) {}
   // for (uint64_t i = 0; i < (n + 15) / 16; ++i) {  
   //   c << (a.read() + b.read());
   // }
