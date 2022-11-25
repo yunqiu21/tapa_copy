@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <unistd.h>
 
 #include <tapa.h>
 using float_v16 = tapa::vec_t<float, 16>;
@@ -7,10 +8,22 @@ void Add(tapa::istream<float_v16>& a,
          tapa::istream<float_v16>& b,
          tapa::ostream<float_v16>& c, 
          uint64_t n) {
-  for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
-  #pragma HLS pipeline
-    c << (a.read() + b.read());
+  float_v16 a_chunk, b_chunk;
+  printf("%d", a.empty());
+  printf("%d", b.empty()); 
+  printf("%d", c.full()); 
+  while (!a.empty() && !b.empty() && !c.full()) {
+    printf("\n");
+    printf("%d", a.try_read(a_chunk));
+    printf("%d", b.try_read(b_chunk));
+    printf("%d", c.try_write(a_chunk + b_chunk));
   }
+  // while (a.try_read(a_chunk) && b.try_read(b_chunk)) {
+  //   c << (a_chunk + b_chunk);
+  // }
+  // for (uint64_t i = 0; i < (n + 15) / 16; ++i) {  
+  //   c << (a.read() + b.read());
+  // }
 }
 
 void Mmap2Stream(tapa::mmap<const float_v16> mmap, 
