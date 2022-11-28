@@ -23,7 +23,7 @@ if(SDx_FOUND)
   )
 
   add_xocc_hw_link_targets(
-    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR} --config=./link_config.ini
     ${VPP_ARGS}
     INPUT vadd-hw-xo
     HW_EMU_XCLBIN hw_emu_xclbin
