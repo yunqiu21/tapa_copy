@@ -10,7 +10,7 @@ void Add(tapa::istream<float_v16>& a,
          uint64_t n) {
   float_v16 a_chunk, b_chunk;
   for (uint64_t i = 0; i < (n + 15) / 16;) {
-  #pragma HLS loop_tripcount min=1 max=n  
+  #pragma HLS loop_tripcount min=1 max=1024*1024  
     if (!a.empty() && !b.empty() && !c.full()) {
       a.try_read(a_chunk);
       b.try_read(b_chunk);
