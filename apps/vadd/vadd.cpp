@@ -9,11 +9,14 @@ void Add(tapa::istream<float_v16>& a,
          tapa::ostream<float_v16>& c, 
          uint64_t n) {
   float_v16 a_chunk, b_chunk;
-  for (uint64_t i = 0; i < (n + 15) / 16; ++i) {    
+  for (uint64_t i = 0; i < (n + 15) / 16;) {
   #pragma HLS loop_tripcount min=1 max=n  
-    a.try_read(a_chunk);
-    b.try_read(b_chunk);
-    c.try_write(a_chunk + b_chunk);
+    if (!a.empty() && !b.empty() && !c.full()) {
+      a.try_read(a_chunk);
+      b.try_read(b_chunk);
+      c.try_write(a_chunk + b_chunk);
+      i++;
+    }
   }
 }
 
