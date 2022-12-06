@@ -10,8 +10,8 @@ void Add(tapa::istream<float_v16>& a,
          uint64_t n) {
   float_v16 a_chunk, b_chunk;
   for (uint64_t i = 0; i < (n + 15) / 16;) {
-    #pragma HLS pipeline II=1
     #pragma HLS loop_tripcount min=1 max=1024*1024  
+    #pragma HLS pipeline II=1
     if (!a.empty() && !b.empty() && !c.full()) {
       a.try_read(a_chunk);
       b.try_read(b_chunk);
@@ -24,8 +24,8 @@ void Add(tapa::istream<float_v16>& a,
 void Mmap2Stream(tapa::mmap<const float_v16> mmap, 
                  uint64_t n,
                  tapa::ostream<float_v16>& stream) {
-  #pragma HLS pipeline II=1  
   #pragma HLS loop_tripcount min=1 max=1024*1024 
+  #pragma HLS pipeline II=1  
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
     stream << mmap[i];
   }
@@ -34,8 +34,8 @@ void Mmap2Stream(tapa::mmap<const float_v16> mmap,
 void Stream2Mmap(tapa::istream<float_v16>& stream, 
                  tapa::mmap<float_v16> mmap,
                  uint64_t n) {
-  #pragma HLS pipeline II=1  
   #pragma HLS loop_tripcount min=1 max=1024*1024 
+  #pragma HLS pipeline II=1  
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
     stream >> mmap[i];
   }
