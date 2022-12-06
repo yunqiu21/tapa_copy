@@ -57,10 +57,14 @@ void Cnn(tapa::mmap<const float_v16> input,
   tapa::stream<float_v16, 2> weight_stream("weight"); 
   tapa::stream<float_v16, 2> bias_stream("bias"); 
   tapa::stream<float_v16, 2> output_stream("output");
+  uint64_t input_size = kNum*kInImSize*kInImSize;
+  uint64_t weight_size = kNum*kNum*kKernel*kKernel;
+  uint64_t bias_size = kNum;
+  uint64_t output_size = kNum*kOutImSize*kOutImSize;
   tapa::task()
-      .invoke(Mmap2Stream, "Mmap2Stream", input, input_stream, kNum*kInImSize*kInImSize)       
-      .invoke(Mmap2Stream, "Mmap2Stream", weight, weight_stream, kNum*kNum*kKernel*kKernel)       
-      .invoke(Mmap2Stream, "Mmap2Stream", bias, bias_stream, kNum)
+      .invoke(Mmap2Stream, "Mmap2Stream", input, input_stream, input_size)       
+      .invoke(Mmap2Stream, "Mmap2Stream", weight, weight_stream, weight_size)       
+      .invoke(Mmap2Stream, "Mmap2Stream", bias, bias_stream, bias_size)
       .invoke(Dummy, "Dummy", input_stream, weight_stream, bias_stream, output_stream, kNum, kKernel, kInImSize, kOutImSize)
-      .invoke(Stream2Mmap, "Stream2Mmap", output_stream, output, kNum*kOutImSize*kOutImSize);
+      .invoke(Stream2Mmap, "Stream2Mmap", output_stream, output, output_size);
 }
