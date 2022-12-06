@@ -6,6 +6,7 @@ void Mmap2Stream(tapa::mmap<const float_v16> mmap,
                  tapa::ostream<float_v16>& stream,
                  uint64_t n) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
+    #pragma HLS pipeline II=1
     stream << mmap[i];
   }
 }
@@ -14,6 +15,7 @@ void Stream2Mmap(tapa::istream<float_v16>& stream,
                  tapa::mmap<float_v16> mmap,
                  uint64_t n) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
+    #pragma HLS pipeline II=1
     stream >> mmap[i];
   }
 }
@@ -32,15 +34,19 @@ void Dummy(tapa::istream<float_v16>& in_img_stream,
   const uint64_t bias_aligned_size = (kNum + 15) / 16;
   const uint64_t out_img_aligned_size = (kNum*kOutImSize*kOutImSize + 15) / 16;
   for (uint64_t i = 0; i < in_img_aligned_size; i++) {
+    #pragma HLS pipeline II=1
     in_img_stream.read();
   }
   for (uint64_t i = 0; i < weight_aligned_size; i++) {
+    #pragma HLS pipeline II=1
     weight_stream.read();
   }
   for (uint64_t i = 0; i < bias_aligned_size; i++) {
+    #pragma HLS pipeline II=1
     bias_stream.read();
   }
   for (uint64_t i = 0; i < out_img_aligned_size; i++) {
+    #pragma HLS pipeline II=1
     out_img_stream << dummy;
   }
 }
