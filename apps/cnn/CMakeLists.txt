@@ -5,19 +5,12 @@ target_sources(cnn PRIVATE cnn-host.cpp cnn.cpp)
 target_link_libraries(cnn PRIVATE ${TAPA})
 add_test(NAME cnn COMMAND cnn)
 
+set(PLATFORM
+  xilinx_u200_qdma_201920_1
+)
+
 find_package(SDx)
 if(SDx_FOUND)
-  if(${PLATFORM} EQUAL xilinx_u250_xdma_201830_2
-     OR ${PLATFORM} EQUAL xilinx_u280_xdma_201920_3
-  )
-    list(APPEND TAPA_ARGS --floorplan-output ${CMAKE_CURRENT_BINARY_DIR}/constraint.tcl)
-    list(
-      APPEND
-      VPP_ARGS
-      --vivado.prop=run.impl_1.STEPS.OPT_DESIGN.TCL.PRE=${CMAKE_CURRENT_BINARY_DIR}/constraint.tcl
-    )
-  endif()
-
   add_tapa_target(
     cnn-hw-xo
     INPUT cnn.cpp
