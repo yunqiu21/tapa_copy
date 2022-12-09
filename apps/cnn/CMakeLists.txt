@@ -6,7 +6,7 @@ target_link_libraries(cnn PRIVATE ${TAPA})
 add_test(NAME cnn COMMAND cnn)
 
 set(PLATFORM
-  xilinx_u200_qdma_201920_1
+  xilinx_u280_xdma_201920_3
 )
 
 find_package(SDx)
