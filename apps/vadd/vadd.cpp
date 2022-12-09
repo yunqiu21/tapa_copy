@@ -12,10 +12,10 @@ void Add(tapa::istream<float_v16>& a,
     #pragma HLS loop_tripcount min=1 max=1024*1024  
     #pragma HLS pipeline II=1
     float_v16 a_chunk, b_chunk;
-    if (!a.empty() && !b.empty() && !c.full()) {
+    if (!a.empty() && !b.empty()) {
       a.try_read(a_chunk);
       b.try_read(b_chunk);
-      c.try_write(a_chunk + b_chunk);
+      c << (a_chunk + b_chunk);
       i++;
     }
   }
