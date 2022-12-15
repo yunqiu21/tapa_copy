@@ -9,7 +9,7 @@ using std::clog;
 using std::endl;
 using std::vector;
 
-void VecAdd(tapa::mmap<const float_v16> a_array, tapa::mmap<const float_v16> b_array,
+void VecAdd(tapa::mmap<float_v16> a_array, tapa::mmap<float_v16> b_array,
             tapa::mmap<float_v16> c_array, uint64_t n);
 
 DEFINE_string(bitstream, "", "path to bitstream file, run csim if empty");
@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
     c[i] = 0.f;
   }
   int64_t kernel_time_ns = tapa::invoke(
-      VecAdd, FLAGS_bitstream, tapa::read_only_mmap<const float>(a).reinterpret<const float_v16>(),
-      tapa::read_only_mmap<const float>(b).reinterpret<const float_v16>(), tapa::write_only_mmap<float>(c).reinterpret<float_v16>(), n);
+      VecAdd, FLAGS_bitstream, tapa::read_only_mmap<float>(a).reinterpret<float_v16>(),
+      tapa::read_only_mmap<float>(b).reinterpret<float_v16>(), tapa::write_only_mmap<float>(c).reinterpret<float_v16>(), n);
   clog << "kernel time: " << kernel_time_ns * 1e-9 << " s" << endl;
 
   uint64_t num_errors = 0;
