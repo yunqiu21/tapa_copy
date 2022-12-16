@@ -22,14 +22,18 @@ void Cnn(tapa::mmap<const float_v16> in_img,
          uint64_t kNum, 
          uint64_t kKernel, 
          uint64_t kInImSize,
-         uint64_t kOutImSize);
+         uint64_t kOutImSize,
+         uint64_t in_img_size,
+         uint64_t weight_size,
+         uint64_t bias_size,
+         uint64_t out_img_size);
 
 DEFINE_string(bitstream, "", "path to bitstream file, run csim if empty");
 
 int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-  const uint64_t kNum = 8;
+  const uint64_t kNum = 128;
   const uint64_t kKernel = 5;
   const uint64_t kInImSize = 8;
   const uint64_t kOutImSize = 4;
@@ -52,7 +56,11 @@ int main(int argc, char* argv[]) {
     kNum, 
     kKernel, 
     kInImSize,
-    kOutImSize);
+    kOutImSize,
+    kNum*kInImSize*kInImSize,
+    kNum*kNum*kKernel*kKernel,
+    kNum,
+    kNum*kOutImSize*kOutImSize);
   clog << "kernel time: " << kernel_time_ns * 1e-9 << " s" << endl;
 
   return 0;

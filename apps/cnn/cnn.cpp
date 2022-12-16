@@ -1,76 +1,155 @@
 #include <tapa.h>
 #include <unistd.h>
+#include <vector>
 using float_v16 = tapa::vec_t<float, 16>;
+#define Input(x,y,z)    \
+    (in_img_vec[(x)*kInImSize*kInImSize+(y)*kInImSize+(z)])
+#define Weight(x,y,z,i) \
+    (weight_vec[(x)*kNum*kKernel*kKernel+(y)*kKernel*kKernel+(z)*kKernel+(i)])
+#define Bias(x)         \
+    (bias_vec[(x)])
+#define Output(x,y,z)   \
+    (out_img_vec[(x)*kOutImSize*kOutImSize+(y)*kOutImSize+z])
+#define C(x,y,z)   \
+    (c_vec[(x)*kImSize*kImSize+(y)*kImSize+z])
+
+template <class T>
+inline T max(T a, T b) { return a > b ? a : b; }
 
 void Mmap2Stream(tapa::mmap<const float_v16> mmap,
                  tapa::ostream<float_v16>& stream,
                  uint64_t n) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
-    #pragma HLS pipeline II=1
+#pragma HLS loop_tripcount min=1 max=1024*1024
+#pragma HLS pipeline II=1
     stream << mmap[i];
   }
 }
 
-void Stream2Mmap(tapa::istream<float_v16>& stream, 
+void Stream2Mmap(tapa::istream<float_v16>& stream,
                  tapa::mmap<float_v16> mmap,
                  uint64_t n) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
-    #pragma HLS pipeline II=1
+#pragma HLS loop_tripcount min=1 max=1024*1024
+#pragma HLS pipeline II=1
     stream >> mmap[i];
   }
 }
 
-void Dummy(tapa::istream<float_v16>& in_img_stream, 
+void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::istream<float_v16>& weight_stream,
            tapa::istream<float_v16>& bias_stream,
-           tapa::ostream<float_v16>& out_img_stream, 
-           uint64_t kNum, 
-           uint64_t kKernel, 
-           uint64_t kInImSize,
-           uint64_t kOutImSize) {
-  float_v16 dummy;
+           tapa::ostream<float_v16>& out_img_stream,
+           const uint64_t& kNum,
+           const uint64_t& kKernel,
+           const uint64_t& kInImSize,
+           const uint64_t& kOutImSize) {
   const uint64_t in_img_aligned_size = (kNum*kInImSize*kInImSize + 15) / 16;
   const uint64_t weight_aligned_size = (kNum*kNum*kKernel*kKernel + 15) / 16;
   const uint64_t bias_aligned_size = (kNum + 15) / 16;
   const uint64_t out_img_aligned_size = (kNum*kOutImSize*kOutImSize + 15) / 16;
+  const uint64_t kImSize = kOutImSize * 2;
+  const uint64_t c_vec_size = kNum*kImSize*kImSize;
+  std::vector<float> c_vec(c_vec_size, 0.f);
+  std::vector<float> bias_vec;
+  std::vector<float> in_img_vec;
+  std::vector<float> weight_vec;
+  std::vector<float> out_img_vec(out_img_aligned_size*16, 0.f);
+  for (uint64_t i = 0; i < bias_aligned_size; i++) {
+    #pragma HLS pipeline II=1
+    float_v16 bias_v16 = bias_stream.read();
+    for (int pos = 0; pos < 16; ++pos)
+      bias_vec.push_back(bias_v16[pos]);
+  }
   for (uint64_t i = 0; i < in_img_aligned_size; i++) {
     #pragma HLS pipeline II=1
-    in_img_stream.read();
+    float_v16 in_img_v16 = in_img_stream.read();
+    for (int pos = 0; pos < 16; ++pos)
+      in_img_vec.push_back(in_img_v16[pos]);
   }
   for (uint64_t i = 0; i < weight_aligned_size; i++) {
     #pragma HLS pipeline II=1
-    weight_stream.read();
+    float_v16 weight_v16 = weight_stream.read();
+    for (int pos = 0; pos < 16; ++pos)
+      weight_vec.push_back(weight_v16[pos]);
   }
-  for (uint64_t i = 0; i < bias_aligned_size; i++) {
+
+set_bias:
+  for (int i = 0; i < kNum; ++i) {
     #pragma HLS pipeline II=1
-    bias_stream.read();
+    for (int h = 0; h < kImSize; ++h) {
+      for (int w = 0; w < kImSize; ++w)
+        C(i,h,w) = Bias(i);
+    }
   }
+
+convolution:
+  for (int i = 0; i < kNum; ++i) {
+    #pragma HLS pipeline II=1
+    for (int j = 0; j < kNum; ++j) {
+      for (int h = 0; h < kImSize; ++h) {
+        for (int w = 0; w < kImSize; ++w) {
+          for (int p = 0; p < kKernel; ++p) {
+            for (int q = 0; q < kKernel; ++q)
+              C(i,h,w) += Weight(i,j,p,q) * Input(j,h+p,w+q);
+          }
+        }
+      }
+    }
+  }
+
+ReLU:
+  for (int i = 0; i < kNum; ++i) {
+    #pragma HLS pipeline II=1
+    for (int h = 0; h < kImSize; ++h) {
+      for (int w = 0; w < kImSize; ++w) {
+        C(i,h,w) = max(0.f, C(i,h,w));
+      }
+    }
+  }
+
+max_pooling:
+  for (int i = 0; i < kNum; ++i) {
+    #pragma HLS pipeline II=1
+    for (int h = 0; h < kOutImSize; ++h) {
+      for (int w = 0; w < kOutImSize; ++w) {
+        Output(i,h,w) = max(
+            max(C(i,h*2,w*2), C(i,h*2+1,w*2)),
+            max(C(i,h*2,w*2+1), C(i,h*2+1,w*2+1)));
+      }
+    }
+  }
+
+output:
   for (uint64_t i = 0; i < out_img_aligned_size; i++) {
     #pragma HLS pipeline II=1
-    out_img_stream << dummy;
+    float_v16 out_img_v16;
+    for (int pos = 0; pos < 16; ++pos)
+      out_img_v16[pos] = out_img_vec[i*16+pos];
+    out_img_stream << out_img_v16;
   }
 }
 
-void Cnn(tapa::mmap<const float_v16> in_img, 
-         tapa::mmap<const float_v16> weight, 
-         tapa::mmap<const float_v16> bias, 
-         tapa::mmap<float_v16> out_img, 
-         uint64_t kNum, 
-         uint64_t kKernel, 
+void Cnn(tapa::mmap<const float_v16> in_img,
+         tapa::mmap<const float_v16> weight,
+         tapa::mmap<const float_v16> bias,
+         tapa::mmap<float_v16> out_img,
+         uint64_t kNum,
+         uint64_t kKernel,
          uint64_t kInImSize,
-         uint64_t kOutImSize) {  
+         uint64_t kOutImSize,
+         uint64_t in_img_size,
+         uint64_t weight_size,
+         uint64_t bias_size,
+         uint64_t out_img_size) {
   tapa::stream<float_v16, 2> in_img_stream("in_img");
-  tapa::stream<float_v16, 2> weight_stream("weight"); 
-  tapa::stream<float_v16, 2> bias_stream("bias"); 
+  tapa::stream<float_v16, 2> weight_stream("weight");
+  tapa::stream<float_v16, 2> bias_stream("bias");
   tapa::stream<float_v16, 2> out_img_stream("out_img");
-  uint64_t in_img_size = kNum*kInImSize*kInImSize;
-  uint64_t weight_size = kNum*kNum*kKernel*kKernel;
-  uint64_t bias_size = kNum;
-  uint64_t out_img_size = kNum*kOutImSize*kOutImSize;
   tapa::task()
-    .invoke(Mmap2Stream, in_img, in_img_stream, 512)       
-    .invoke(Mmap2Stream, weight, weight_stream, 1600)       
-    .invoke(Mmap2Stream, bias, bias_stream, 8)
-    .invoke(Dummy, in_img_stream, weight_stream, bias_stream, out_img_stream, kNum, kKernel, kInImSize, kOutImSize)
-    .invoke(Stream2Mmap, out_img_stream, out_img, 128);
+    .invoke(Mmap2Stream, in_img, in_img_stream, in_img_size)
+    .invoke(Mmap2Stream, weight, weight_stream, weight_size)
+    .invoke(Mmap2Stream, bias, bias_stream, bias_size)
+    .invoke(Convolution, in_img_stream, weight_stream, bias_stream, out_img_stream, kNum, kKernel, kInImSize, kOutImSize)
+    .invoke(Stream2Mmap, out_img_stream, out_img, out_img_size);
 }
