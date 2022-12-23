@@ -1,6 +1,7 @@
 #include <tapa.h>
 #include <unistd.h>
 #include <vector>
+#include "cnn.h"
 using float_v16 = tapa::vec_t<float, 16>;
 #define Input(x,y,z)    \
     (in_img_vec[(x)*kInImSize*kInImSize+(y)*kInImSize+(z)])
@@ -39,11 +40,7 @@ void Stream2Mmap(tapa::istream<float_v16>& stream,
 void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::istream<float_v16>& weight_stream,
            tapa::istream<float_v16>& bias_stream,
-           tapa::ostream<float_v16>& out_img_stream,
-           const uint64_t& kNum,
-           const uint64_t& kKernel,
-           const uint64_t& kInImSize,
-           const uint64_t& kOutImSize) {
+           tapa::ostream<float_v16>& out_img_stream) {
   const uint64_t in_img_aligned_size = (kNum*kInImSize*kInImSize + 15) / 16;
   const uint64_t weight_aligned_size = (kNum*kNum*kKernel*kKernel + 15) / 16;
   const uint64_t bias_aligned_size = (kNum + 15) / 16;
@@ -133,15 +130,7 @@ output:
 void Cnn(tapa::mmap<const float_v16> in_img,
          tapa::mmap<const float_v16> weight,
          tapa::mmap<const float_v16> bias,
-         tapa::mmap<float_v16> out_img,
-         uint64_t kNum,
-         uint64_t kKernel,
-         uint64_t kInImSize,
-         uint64_t kOutImSize,
-         uint64_t in_img_size,
-         uint64_t weight_size,
-         uint64_t bias_size,
-         uint64_t out_img_size) {
+         tapa::mmap<float_v16> out_img) {
   tapa::stream<float_v16, 2> in_img_stream("in_img");
   tapa::stream<float_v16, 2> weight_stream("weight");
   tapa::stream<float_v16, 2> bias_stream("bias");
@@ -150,6 +139,6 @@ void Cnn(tapa::mmap<const float_v16> in_img,
     .invoke(Mmap2Stream, in_img, in_img_stream, in_img_size)
     .invoke(Mmap2Stream, weight, weight_stream, weight_size)
     .invoke(Mmap2Stream, bias, bias_stream, bias_size)
-    .invoke(Convolution, in_img_stream, weight_stream, bias_stream, out_img_stream, kNum, kKernel, kInImSize, kOutImSize)
+    .invoke(Convolution, in_img_stream, weight_stream, bias_stream, out_img_stream)
     .invoke(Stream2Mmap, out_img_stream, out_img, out_img_size);
 }
