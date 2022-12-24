@@ -86,7 +86,7 @@ set_bias:
 
 convolution:
   for (int i = 0; i < kNum; ++i) {
-    #pragma HLS pipeline II=1
+    // #pragma HLS pipeline II=1
     for (int j = 0; j < kNum; ++j) {
       for (int h = 0; h < kImSize; ++h) {
         for (int w = 0; w < kImSize; ++w) {
