@@ -47,11 +47,15 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   const uint64_t out_img_aligned_size = (kNum*kOutImSize*kOutImSize + 15) / 16;
   const uint64_t kImSize = kOutImSize * 2;
   const uint64_t c_vec_size = kNum*kImSize*kImSize;
-  std::vector<float> c_vec(c_vec_size, 0.f);
-  std::vector<float> bias_vec(bias_aligned_size*16, 0.f);
-  std::vector<float> in_img_vec(in_img_aligned_size*16, 0.f);
-  std::vector<float> weight_vec(weight_aligned_size*16, 0.f);
-  std::vector<float> out_img_vec(out_img_aligned_size*16, 0.f);
+  float c_vec[c_vec_size];
+  float bias_vec[bias_aligned_size*16];
+  float in_img_vec[in_img_aligned_size*16];
+  float weight_vec[weight_aligned_size*16];
+  float out_img_vec[out_img_aligned_size*16];
+  // std::vector<float> bias_vec(bias_aligned_size*16, 0.f);
+  // std::vector<float> in_img_vec(in_img_aligned_size*16, 0.f);
+  // std::vector<float> weight_vec(weight_aligned_size*16, 0.f);
+  // std::vector<float> out_img_vec(out_img_aligned_size*16, 0.f);
   for (uint64_t i = 0; i < bias_aligned_size; i++) {
     #pragma HLS pipeline II=1
     float_v16 bias_v16 = bias_stream.read();
