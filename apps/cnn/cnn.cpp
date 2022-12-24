@@ -23,6 +23,7 @@ void Mmap2Stream(tapa::mmap<const float_v16> mmap,
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
 #pragma HLS loop_tripcount min=1 max=1024*1024
 #pragma HLS pipeline II=1
+    printf("Call Mmap2Stream\n");
     stream << mmap[i];
   }
 }
@@ -33,6 +34,7 @@ void Stream2Mmap(tapa::istream<float_v16>& stream,
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
 #pragma HLS loop_tripcount min=1 max=1024*1024
 #pragma HLS pipeline II=1
+    printf("Call Stream2Mmap\n");
     stream >> mmap[i];
   }
 }
