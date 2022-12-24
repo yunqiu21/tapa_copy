@@ -56,6 +56,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   // std::vector<float> in_img_vec(in_img_aligned_size*16, 0.f);
   // std::vector<float> weight_vec(weight_aligned_size*16, 0.f);
   // std::vector<float> out_img_vec(out_img_aligned_size*16, 0.f);
+  printf("Read data to local\n");
   for (uint64_t i = 0; i < bias_aligned_size; i++) {
     #pragma HLS pipeline II=1
     float_v16 bias_v16 = bias_stream.read();
@@ -74,7 +75,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     for (int pos = 0; pos < 16; ++pos)
       weight_vec[i*16+pos] = weight_v16[pos];
   }
-
+printf("Set bias\n");
 set_bias:
   for (int i = 0; i < kNum; ++i) {
     #pragma HLS pipeline II=1
@@ -83,7 +84,7 @@ set_bias:
         C(i,h,w) = Bias(i);
     }
   }
-
+printf("Convolution\n");
 convolution:
   for (int i = 0; i < kNum; ++i) {
     // #pragma HLS pipeline II=1
@@ -98,7 +99,7 @@ convolution:
       }
     }
   }
-
+printf("ReLU\n");
 ReLU:
   for (int i = 0; i < kNum; ++i) {
     #pragma HLS pipeline II=1
@@ -108,7 +109,7 @@ ReLU:
       }
     }
   }
-
+printf("Max pooling\n");
 max_pooling:
   for (int i = 0; i < kNum; ++i) {
     #pragma HLS pipeline II=1
@@ -120,7 +121,7 @@ max_pooling:
       }
     }
   }
-
+printf("Write output\n");
 output:
   for (uint64_t i = 0; i < out_img_aligned_size; i++) {
     #pragma HLS pipeline II=1
