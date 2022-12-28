@@ -14,7 +14,6 @@ using std::clog;
 using std::endl;
 using std::vector;
 using std::string;
-using float_v16 = tapa::vec_t<float, 16>;
 
 void Cnn(tapa::mmap<const float_v16> in_img, 
          tapa::mmap<const float_v16> weight, 
@@ -31,10 +30,10 @@ int main(int argc, char* argv[]) {
   // const uint64_t kInImSize = 8;
   // const uint64_t kOutImSize = 4;
 
-  const uint64_t in_img_aligned_size = ((in_img_size + 15) / 16) * 16;
-  const uint64_t weight_aligned_size = ((weight_size + 15) / 16) * 16;
-  const uint64_t bias_aligned_size = ((bias_size + 15) / 16) * 16;
-  const uint64_t out_img_aligned_size = ((out_img_size + 15) / 16) * 16;
+  const uint64_t in_img_aligned_size = ((kInImgSize + 15) / 16) * 16;
+  const uint64_t weight_aligned_size = ((kWeightSize + 15) / 16) * 16;
+  const uint64_t bias_aligned_size = ((kBiasSize + 15) / 16) * 16;
+  const uint64_t out_img_aligned_size = ((kOutImgSize + 15) / 16) * 16;
   vector<float> in_img(in_img_aligned_size, 0.f);
   vector<float> weight(weight_aligned_size, 0.f);
   vector<float> bias(bias_aligned_size, 0.f);
