@@ -81,9 +81,10 @@ printf("Set bias\n");
 set_bias:
   for (int i = 0; i < kNum; ++i) {
     #pragma HLS pipeline II=1
+    float b = Bias(i);
     for (int h = 0; h < kImSize; ++h) {
       for (int w = 0; w < kImSize; ++w)
-        C(i,h,w) = Bias(i);
+        C(i,h,w) = b;
     }
   }
 printf("Convolution\n");
