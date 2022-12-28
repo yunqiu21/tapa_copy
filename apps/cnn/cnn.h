@@ -1,5 +1,5 @@
-#define kNum 16
-#define kOutImDim 4
+#define kNum 256
+#define kOutImDim 112
 #define kImDim (kOutImDim*2)
 #define kKernel 5
 #define kInImDim (kImDim+kKernel-1)
@@ -16,13 +16,16 @@
     (bias_vec[(x)])
 #define Output(x,y,z)   \
     (out_img_vec[(x)*kOutImDim*kOutImDim+(y)*kOutImDim+(z)])
-#define C(x,y)   \
-    (c_vec[x][y])
 // #define C(x,y)   \
-//     (c_vec[(x)*kImDim+(y)])
+//     (c_vec[x][y])
+#define C(x,y)   \
+    (c_vec[(x)*kImDim+(y)])
 
 using float_v16 = tapa::vec_t<float, 16>;
 
 template <class T>
 inline T max(T a, T b) { return a > b ? a : b; }
+
+#define kTileH 112
+#define kTileW 112
 
