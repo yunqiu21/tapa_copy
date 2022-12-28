@@ -80,7 +80,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     // printf("Convolution\n");
     convolution_j:
     for (int j = 0; j < kNum; ++j) {
-      #pragma HLS pipeline II=1
+      // #pragma HLS pipeline II=1
       convolution_p:
       for (int p = 0; p < kKernel; ++p) {
         convolution_q:
