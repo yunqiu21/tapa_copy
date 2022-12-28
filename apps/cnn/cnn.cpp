@@ -92,11 +92,12 @@ convolution:
     // #pragma HLS pipeline II=1
     for (int j = 0; j < kNum; ++j) {
       for (int p = 0; p < kKernel; ++p) {
-        for (int q = 0; q < kKernel; ++q)
+        for (int q = 0; q < kKernel; ++q) {
           float w = Weight(i,j,p,q);
           for (int h = 0; h < kImSize; ++h) {
             for (int w = 0; w < kImSize; ++w) {
               C(i,h,w) += w * Input(j,h+p,w+q);
+            }
           }
         }
       }
