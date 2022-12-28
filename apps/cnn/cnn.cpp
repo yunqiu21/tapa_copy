@@ -36,9 +36,11 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   const uint64_t kImSize = kOutImSize * 2;
   const uint64_t c_vec_size = kImSize*kImSize;
   float c_vec[kImSize][kImSize];
+  #pragma HLS array_partition variable=c_vec dim=1 cyclic factor=2
+  #pragma HLS array_partition variable=c_vec dim=2 cyclic factor=2
   float bias_vec[bias_v16_size*16];
   float in_img_vec[in_img_v16_size*16];
-  // #pragma HLS array_partition variable=in_img_vec dim=1 cyclic factor=4
+  #pragma HLS array_partition variable=in_img_vec dim=1 cyclic factor=4
   float weight_vec[weight_v16_size*16];
   float out_img_vec[out_img_v16_size*16];
   // printf("Read data to local\n");
@@ -112,7 +114,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   }
 
   // printf("Write output\n");
-  output:
+  write_out_img:
   for (uint64_t i = 0; i < out_img_v16_size; i++) {
     #pragma HLS pipeline II=1
     float_v16 out_img_v16;
