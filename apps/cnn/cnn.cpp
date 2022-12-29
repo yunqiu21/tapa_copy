@@ -28,25 +28,24 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::istream<float_v16>& bias_stream,
            tapa::ostream<float_v16>& out_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
-  static float C[kImDim][kImDim];
+  // static float C[kImDim][kImDim];
   // #pragma HLS array_partition variable=C dim=1 cyclic factor=2
-  #pragma HLS array_partition variable=C dim=2 complete
+  static float Weight[kNum][kNum][kKernel][kKernel];
+  #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
   #pragma HLS array_partition variable=InImg dim=1 cyclic factor=4
   #pragma HLS array_partition variable=InImg dim=3 complete
-  static float Weight[kNum][kNum][kKernel][kKernel];
-  #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
   static float OutImg[kNum][kOutImDim][kOutImDim];
   #pragma HLS array_partition variable=OutImg dim=3 complete
 
-  // static float input[kNum][kTileH+kKernel-1][kTileW+kKernel-1];
-  // #pragma HLS array_partition variable=input dim=1 cyclic factor=4
-  // #pragma HLS array_partition variable=input dim=3 complete
-  // static float bias[kNum];
-  // static float output[kNum][kTileH/2][kTileW/2];
-  // static float C[kTileH][kTileW];
-  // static float wt[8];
+  static float inimg[kNum][kTileH+kKernel-1][kTileW+kKernel-1];
+  #pragma HLS array_partition variable=inimg dim=1 cyclic factor=4
+  #pragma HLS array_partition variable=inimg dim=3 complete
+  static float outimg[kNum][kTileH/2][kTileW/2];
+  static float C[kTileH][kTileW];
+  #pragma HLS array_partition variable=C dim=2 complete
+  static float wt[kTileJ];
 
   read_bias:
   for (uint64_t i = 0; i < (kBiasSize+15)/16; i++) {
@@ -70,58 +69,92 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
       ((float*)Weight)[i*16+pos] = weight_v16[pos];
   }
   
-  main_i_loop:
-  for (int i = 0; i < kNum; ++i) {
+  main_loop_tile_h:
+  for (int hh = 0; hh < kImDim; hh += kTileH) {
 
-    /* Set Bias */
-    float b = Bias[i];
-    set_bias_h:
-    for (int h = 0; h < kImDim; ++h) {
-      #pragma HLS pipeline II=1
-      set_bias_w:
-      for (int w = 0; w < kImDim; ++w)
-        C[h][w] = b;
-    }
+    main_loop_tile_w:
+    for (int ww = 0; ww < kImDim; ww += kTileW) {
 
-    /* Convolution */
-    convolution_j:
-    for (int j = 0; j < kNum; ++j) {
-      convolution_p:
-      for (int p = 0; p < kKernel; ++p) {
-        convolution_q:
-        for (int q = 0; q < kKernel; ++q) {
-          float w = Weight[i][j][p][q];
-          convolution_h:
-          for (int h = 0; h < kImDim; ++h) {
-            #pragma HLS pipeline II=1
-            convolution_w:
-            for (int w = 0; w < kImDim; ++w) {
-              C[h][w] += w * InImg[j][h+p][w+q];
-            }
+      read_tile:
+      for (int j = 0; j < kNum; ++j) {
+        for (int h = 0; h < kTileH+kKernel-1; ++h) {
+          #pragma HLS pipeline II=1
+          for (int w = 0; w < kTileW+kKernel-1; ++w) {
+            inimg[j][h][w] = InImg[j][hh+h][ww+w];
           }
         }
       }
-    }
 
-    /* ReLU */
-    ReLU_h:
-    for (int h = 0; h < kImDim; ++h) {
-      #pragma HLS pipeline II=1
-      ReLU_w:
-      for (int w = 0; w < kImDim; ++w) {
-        C[h][w] = max(0.f, C[h][w]);
-      }
-    }
+      main_loop_i:
+      for (int i = 0; i < kNum; ++i) {
 
-    /* Max Pooling */
-    max_pooling_h:  
-    for (int h = 0; h < kOutImDim; ++h) {
-      #pragma HLS pipeline II=1
-      max_pooling_w:
-      for (int w = 0; w < kOutImDim; ++w) {
-        OutImg[i][h][w] = max(
-            max(C[h*2][w*2], C[h*2][w*2+1]),
-            max(C[h*2+1][w*2], C[h*2+1][w*2+1]));
+        /* Set Bias */
+        float b = Bias[i];
+        set_bias_h:
+        for (int h = 0; h < kTileH; ++h) {
+          #pragma HLS pipeline II=1
+          set_bias_w:
+          for (int w = 0; w < kTileW; ++w)
+            C[h][w] = b;
+        }
+
+        /* Convolution */
+        convolution_j:
+        for (int jj = 0; jj < kNum; jj += kTileJ) {
+          convolution_p:
+          for (int p = 0; p < kKernel; ++p) {
+            convolution_q:
+            for (int q = 0; q < kKernel; ++q) {
+              // float w = Weight[i][j][p][q];
+              #pragma unroll
+              for (int j = 0; j < kTileJ; ++j) {
+                wt[j] = Weight[i][jj+j][p][q];
+              }
+              convolution_h:
+              for (int h = 0; h < kTileH; ++h) {
+                #pragma HLS pipeline II=1
+                convolution_w:
+                for (int w = 0; w < kTileW; ++w) {
+                  #pragma unroll
+                  for (int j = 0; j < kTileJ; ++j) {
+                    C[h][w] += wt[j] * InImg[jj+j][h+p][w+q];
+                  }
+                  // C[h][w] += w * InImg[j][h+p][w+q];
+                }
+              }
+            }
+          }
+        }
+
+        /* ReLU */
+        ReLU_h:
+        for (int h = 0; h < kTileH; ++h) {
+          #pragma HLS pipeline II=1
+          ReLU_w:
+          for (int w = 0; w < kTileW; ++w) {
+            C[h][w] = max(0.f, C[h][w]);
+          }
+        }
+
+        /* Max Pooling */
+        max_pooling_h:  
+        for (int h = 0; h < kTileH/2; ++h) {
+          #pragma HLS pipeline II=1
+          max_pooling_w:
+          for (int w = 0; w < kTileW/2; ++w) {
+            outimg[i][h][w] = max(
+              max(C[h*2][w*2], C[h*2][w*2+1]),
+              max(C[h*2+1][w*2], C[h*2+1][w*2+1]));
+          }
+        }
+
+        write_tile: 
+        for (int h = 0; h < kTileH/2; ++h) {
+          #pragma HLS pipeline II=1
+          for (int w = 0; w < kTileW/2; ++w) {
+            OutImg[i][hh+h][ww+w] = outimg[i][h][w];
+          }
+        }
       }
     }
   }
