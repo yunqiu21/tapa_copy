@@ -28,9 +28,8 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::istream<float_v16>& bias_stream,
            tapa::ostream<float_v16>& out_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
-  const uint64_t out_img_v16_size = (kNum*kOutImDim*kOutImDim + 15) / 16;
   static float C[kImDim][kImDim];
-  // #pragma HLS array_partition variable=C dim=1 cyclic factor=2
+  #pragma HLS array_partition variable=C dim=1 cyclic factor=2
   #pragma HLS array_partition variable=C dim=2 complete
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
@@ -39,6 +38,16 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   static float Weight[kNum][kNum][kKernel][kKernel];
   #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
   static float OutImg[kNum][kOutImDim][kOutImDim];
+  #pragma HLS array_partition variable=OutImg dim=3 complete
+
+  // static float input[kNum][kTileH+kKernel-1][kTileW+kKernel-1];
+  // #pragma HLS array_partition variable=input dim=1 cyclic factor=4
+  // #pragma HLS array_partition variable=input dim=3 complete
+  // static float bias[kNum];
+  // static float output[kNum][kTileH/2][kTileW/2];
+  // static float C[kTileH][kTileW];
+  // static float wt[8];
+
   read_bias:
   for (uint64_t i = 0; i < (kBiasSize+15)/16; i++) {
     #pragma HLS pipeline II=1
