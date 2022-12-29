@@ -73,7 +73,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   static float OutImg[kNum][kOutImDim][kOutImDim];
   #pragma HLS array_partition variable=OutImg dim=3 complete
 
-  static float inimg[kNum][kTileH+kKernel-1][kTileW+kKernel-1];
+  static float inimg[kTileJ][kTileH+kKernel-1][kTileW+kKernel-1];
   #pragma HLS array_partition variable=inimg dim=1 cyclic factor=4
   #pragma HLS array_partition variable=inimg dim=3 complete
   static float outimg[kNum][kTileH/2][kTileW/2];
@@ -109,15 +109,15 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     main_loop_tile_w:
     for (int ww = 0; ww < kImDim; ww += kTileW) {
 
-      read_tile:
-      for (int j = 0; j < kNum; ++j) {
-        for (int h = 0; h < kTileH+kKernel-1; ++h) {
-          #pragma HLS pipeline II=1
-          for (int w = 0; w < kTileW+kKernel-1; ++w) {
-            inimg[j][h][w] = InImg[j][hh+h][ww+w];
-          }
-        }
-      }
+      // read_tile:
+      // for (int j = 0; j < kNum; ++j) {
+      //   for (int h = 0; h < kTileH+kKernel-1; ++h) {
+      //     #pragma HLS pipeline II=1
+      //     for (int w = 0; w < kTileW+kKernel-1; ++w) {
+      //       inimg[j][h][w] = InImg[j][hh+h][ww+w];
+      //     }
+      //   }
+      // }
 
       main_loop_i:
       for (int i = 0; i < kNum; ++i) {
@@ -135,6 +135,16 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
         /* Convolution */
         convolution_j:
         for (int jj = 0; jj < kNum; jj += kTileJ) {
+          
+          for (int j = 0; j < kTileJ; ++j) {
+            for (int h = 0; h < kTileH+kKernel-1; ++h) {
+              #pragma HLS pipeline II=1
+              for (int w = 0; w < kTileW+kKernel-1; ++w) {
+                inimg[j][h][w] = InImg[j][hh+h][ww+w];
+              }
+            }
+          }
+          
           convolution_p:
           for (int p = 0; p < kKernel; ++p) {
             convolution_q:
@@ -150,7 +160,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
                 for (int w = 0; w < kTileW; ++w) {
                   float tmp = 0;
                   for (int j = 0; j < kTileJ; ++j) {
-                    tmp += wt[j] * inimg[jj+j][h+p][w+q];
+                    tmp += wt[j] * inimg[j][h+p][w+q];
                   }
                   C[h][w] += tmp;
                 }
