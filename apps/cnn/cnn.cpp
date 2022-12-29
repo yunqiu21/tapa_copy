@@ -30,8 +30,8 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
   const uint64_t out_img_v16_size = (kNum*kOutImDim*kOutImDim + 15) / 16;
   static float C[kImDim][kImDim];
-  // #pragma HLS array_partition variable=c_vec dim=1 cyclic factor=2
-  #pragma HLS array_partition variable=c_vec dim=2 complete
+  // #pragma HLS array_partition variable=C dim=1 cyclic factor=2
+  #pragma HLS array_partition variable=C dim=2 complete
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
   #pragma HLS array_partition variable=InImg dim=1 cyclic factor=4
