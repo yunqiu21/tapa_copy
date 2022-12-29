@@ -15,9 +15,9 @@ using std::endl;
 using std::vector;
 using std::string;
 
-void Cnn(tapa::mmap<const float_v16> in_img, 
-         tapa::mmap<const float_v16> weight, 
-         tapa::mmap<const float_v16> bias, 
+void Cnn(tapa::mmap<float_v16> in_img, 
+         tapa::mmap<float_v16> weight, 
+         tapa::mmap<float_v16> bias, 
          tapa::mmap<float_v16> out_img,
          tapa::mmap<uint64_t> cycle_count);
 
@@ -38,9 +38,9 @@ int main(int argc, char* argv[]) {
 
   int64_t kernel_time_ns = tapa::invoke(
     Cnn, FLAGS_bitstream, 
-    tapa::read_only_mmap<const float>(in_img).reinterpret<const float_v16>(),
-    tapa::read_only_mmap<const float>(weight).reinterpret<const float_v16>(), 
-    tapa::read_only_mmap<const float>(bias).reinterpret<const float_v16>(), 
+    tapa::read_only_mmap<float>(in_img).reinterpret<float_v16>(),
+    tapa::read_only_mmap<float>(weight).reinterpret<float_v16>(), 
+    tapa::read_only_mmap<float>(bias).reinterpret<float_v16>(), 
     tapa::write_only_mmap<float>(out_img).reinterpret<float_v16>(),
     tapa::write_only_mmap<uint64_t>(cycle_count));
   clog << "kernel time: " << kernel_time_ns * 1e-9 << " s" << endl;

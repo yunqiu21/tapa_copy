@@ -1,5 +1,5 @@
-#define kNum 256
-#define kOutImDim 112
+#define kNum 16
+#define kOutImDim 4
 #define kImDim (kOutImDim*2)
 #define kKernel 5
 #define kInImDim (kImDim+kKernel-1)
@@ -15,5 +15,5 @@ inline T max(T a, T b) { return a > b ? a : b; }
 
 #define kTileH (kOutImDim)
 #define kTileW (kOutImDim)
-#define kTileJ (8)
+#define kTileJ (4)
 
