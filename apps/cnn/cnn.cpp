@@ -29,7 +29,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::ostream<float_v16>& out_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
   static float C[kImDim][kImDim];
-  #pragma HLS array_partition variable=C dim=1 cyclic factor=2
+  // #pragma HLS array_partition variable=C dim=1 cyclic factor=2
   #pragma HLS array_partition variable=C dim=2 complete
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
@@ -53,7 +53,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     #pragma HLS pipeline II=1
     float_v16 bias_v16 = bias_stream.read();
     for (int pos = 0; pos < 16 && i*16+pos < kBiasSize; ++pos) 
-      #pragma HLS pipeline II=1     
       ((float*)Bias)[i*16+pos] = bias_v16[pos];
   }
   read_in_img:
@@ -61,7 +60,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     #pragma HLS pipeline II=1
     float_v16 in_img_v16 = in_img_stream.read();
     for (int pos = 0; pos < 16 && i*16+pos < kInImgSize; ++pos)
-      #pragma HLS pipeline II=1
       ((float*)InImg)[i*16+pos] = in_img_v16[pos];
   }
   read_weight:
@@ -69,7 +67,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     #pragma HLS pipeline II=1
     float_v16 weight_v16 = weight_stream.read();
     for (int pos = 0; pos < 16 && i*16+pos < kWeightSize; ++pos)
-      #pragma HLS pipeline II=1
       ((float*)Weight)[i*16+pos] = weight_v16[pos];
   }
   
@@ -83,7 +80,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
       #pragma HLS pipeline II=1
       set_bias_w:
       for (int w = 0; w < kImDim; ++w)
-        #pragma HLS pipeline II=1
         C[h][w] = b;
     }
 
@@ -100,7 +96,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
             #pragma HLS pipeline II=1
             convolution_w:
             for (int w = 0; w < kImDim; ++w) {
-              #pragma HLS pipeline II=1
               C[h][w] += w * InImg[j][h+p][w+q];
             }
           }
@@ -114,7 +109,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
       #pragma HLS pipeline II=1
       ReLU_w:
       for (int w = 0; w < kImDim; ++w) {
-        #pragma HLS pipeline II=1
         C[h][w] = max(0.f, C[h][w]);
       }
     }
@@ -125,7 +119,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
       #pragma HLS pipeline II=1
       max_pooling_w:
       for (int w = 0; w < kOutImDim; ++w) {
-        #pragma HLS pipeline II=1
         OutImg[i][h][w] = max(
             max(C[h*2][w*2], C[h*2+1][w*2]),
             max(C[h*2][w*2+1], C[h*2+1][w*2+1]));
@@ -138,7 +131,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
     #pragma HLS pipeline II=1
     float_v16 out_img_v16;
     for (int pos = 0; pos < 16 && i*16+pos < kOutImgSize; ++pos)
-      #pragma HLS pipeline II=1
       out_img_v16[pos] = ((float*)OutImg)[i*16+pos];
     out_img_stream << out_img_v16;
   }
