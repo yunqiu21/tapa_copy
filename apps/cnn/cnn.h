@@ -1,5 +1,5 @@
 #define kNum 256
-#define kOutImDim 112
+#define kOutImDim 56
 #define kImDim (kOutImDim*2)
 #define kKernel 5
 #define kInImDim (kImDim+kKernel-1)
@@ -8,18 +8,16 @@
 #define kBiasSize (kNum)
 #define kOutImgSize (kNum*kOutImDim*kOutImDim)
 
-#define Input(x,y,z)    \
-    (in_img_vec[(x)*kInImDim*kInImDim+(y)*kInImDim+(z)])
-#define Weight(x,y,z,i) \
-    (weight_vec[(x)*kNum*kKernel*kKernel+(y)*kKernel*kKernel+(z)*kKernel+(i)])
-#define Bias(x)         \
-    (bias_vec[(x)])
-#define Output(x,y,z)   \
-    (out_img_vec[(x)*kOutImDim*kOutImDim+(y)*kOutImDim+(z)])
+// #define Input(x,y,z)    \
+//     (in_img_vec[(x)*kInImDim*kInImDim+(y)*kInImDim+(z)])
+// #define Weight(x,y,z,i) \
+//     (weight_vec[(x)*kNum*kKernel*kKernel+(y)*kKernel*kKernel+(z)*kKernel+(i)])
+// #define Bias(x)         \
+//     (bias_vec[(x)])
+// #define Output(x,y,z)   \
+//     (out_img_vec[(x)*kOutImDim*kOutImDim+(y)*kOutImDim+(z)])
 // #define C(x,y)   \
-//     (c_vec[x][y])
-#define C(x,y)   \
-    (c_vec[(x)*kImDim+(y)])
+//     (c_vec[(x)*kImDim+(y)])
 
 using float_v16 = tapa::vec_t<float, 16>;
 
