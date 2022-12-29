@@ -120,8 +120,8 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
       max_pooling_w:
       for (int w = 0; w < kOutImDim; ++w) {
         OutImg[i][h][w] = max(
-            max(C[h*2][w*2], C[h*2+1][w*2]),
-            max(C[h*2][w*2+1], C[h*2+1][w*2+1]));
+            max(C[h*2][w*2], C[h*2][w*2+1]),
+            max(C[h*2+1][w*2], C[h*2+1][w*2+1]));
       }
     }
   }

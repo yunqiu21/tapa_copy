@@ -13,6 +13,6 @@ using float_v16 = tapa::vec_t<float, 16>;
 template <class T>
 inline T max(T a, T b) { return a > b ? a : b; }
 
-#define kTileH 112
-#define kTileW 112
+#define kTileH (kOutImDim)
+#define kTileW (kOutImDim)
 
