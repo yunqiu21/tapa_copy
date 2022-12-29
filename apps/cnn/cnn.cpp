@@ -32,6 +32,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   // #pragma HLS array_partition variable=C dim=1 cyclic factor=2
   static float Weight[kNum][kNum][kKernel][kKernel];
   #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
+  #pragma HLS array_partition variable=Weight dim=4 complete
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
   #pragma HLS array_partition variable=InImg dim=1 cyclic factor=4
@@ -115,11 +116,12 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
               for (int h = 0; h < kTileH; ++h) {
                 convolution_w:
                 for (int w = 0; w < kTileW; ++w) {
+                  float tmp = 0;
                   for (int j = 0; j < kTileJ; ++j) {
                     // #pragma unroll
-                    C[h][w] += wt[j] * InImg[jj+j][h+p][w+q];
+                    tmp += wt[j] * InImg[jj+j][h+p][w+q];
                   }
-                  // C[h][w] += w * InImg[j][h+p][w+q];
+                  C[h][w] += tmp;
                 }
               }
             }
