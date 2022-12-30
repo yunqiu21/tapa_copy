@@ -138,14 +138,15 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
           convolution_p:
           for (int p = 0; p < kKernel; ++p) {
             convolution_q:
-            for (int q = 0; q < kKernel; ++q) {
-              #pragma HLS pipeline II=1
+            for (int q = 0; q < kKernel; ++q) {              
               // float w = Weight[i][j][p][q];
               for (int j = 0; j < kTileJ; ++j) {
+                #pragma HLS unroll
                 wt[j] = Weight[i][jj+j][p][q];
               }
               convolution_h:
               for (int h = 0; h < kTileH; ++h) {
+                #pragma HLS pipeline II=1
                 convolution_w:
                 for (int w = 0; w < kTileW; ++w) {
                   float tmp = 0;
