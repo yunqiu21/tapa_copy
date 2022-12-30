@@ -1,5 +1,5 @@
 #define kNum 16
-#define kOutImDim 4
+#define kOutImDim 112
 #define kImDim (kOutImDim*2)
 #define kKernel 5
 #define kInImDim (kImDim+kKernel-1)
