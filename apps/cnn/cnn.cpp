@@ -3,23 +3,58 @@
 #include <vector>
 #include "cnn.h"
 
-void Mmap2Stream(tapa::mmap<float_v16> mmap,
+template <typename T, typename R>
+inline void async_read(tapa::async_mmap<T> & A,
+                       tapa::ostream<T> & fifo_A,
+                       const R A_len,
+                       R & i_req,
+                       R & i_resp) {
+  #pragma HLS inline
+  if ((i_req < A_len) &
+    !A.read_addr.full()) {
+    A.read_addr.try_write(i_req);
+    ++i_req;
+  }
+  if (!fifo_A.full() & !A.read_data.empty()) {
+    T tmp;
+    A.read_data.try_read(tmp);
+    fifo_A.try_write(tmp);
+    ++i_resp;
+  }
+}
+
+void Mmap2Stream(tapa::async_mmap<float_v16>& mmap,
                  tapa::ostream<float_v16>& stream,
                  uint64_t n) {
-  for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
+  uint64_t num_iter = (n + 15) / 16;
+  mmap2stream_loop:
+  for (uint64_t i_req = 0, i_resp = 0; i_resp < num_iter;) {
     #pragma HLS loop_tripcount min=1 max=256*228*228
     #pragma HLS pipeline II=1
-    stream << mmap[i];
+    async_read(mmap, stream, num_iter, i_req, i_resp);
   }
 }
 
 void Stream2Mmap(tapa::istream<float_v16>& stream,
-                 tapa::mmap<float_v16> mmap,
+                 tapa::async_mmap<float_v16>& mmap,
                  uint64_t n) {
-  for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
+  uint64_t num_iter = (n + 15) / 16;
+  stream2mmap_loop:
+  for (uint64_t i_req = 0, i_resp = 0; i_resp < num_iter;) {
     #pragma HLS loop_tripcount min=1 max=256*112*112
     #pragma HLS pipeline II=1
-    stream >> mmap[i];
+    if ((i_req < num_iter) & !stream.empty()
+         & !mmap.write_addr.full() & !mmap.write_data.full() ) {
+      mmap.write_addr.try_write(i_req);
+      float_v16 tmpv16;
+      stream.try_read(tmpv16);
+      mmap.write_data.try_write(tmpv16);
+      ++i_req;
+    }
+    uint8_t n_resp;
+    if (mmap.write_resp.try_read(n_resp)) {
+      i_resp += int(n_resp) + 1;
+    }
   }
 }
 
@@ -28,8 +63,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::istream<float_v16>& bias_stream,
            tapa::ostream<float_v16>& out_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
-  // static float C[kImDim][kImDim];
-  // #pragma HLS array_partition variable=C dim=1 cyclic factor=2
   static float Weight[kNum][kNum][kKernel][kKernel];
   #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
   #pragma HLS array_partition variable=Weight dim=4 complete
@@ -109,7 +142,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
               #pragma HLS pipeline II=1
               // float w = Weight[i][j][p][q];
               for (int j = 0; j < kTileJ; ++j) {
-                // #pragma unroll
                 wt[j] = Weight[i][jj+j][p][q];
               }
               convolution_h:
@@ -118,8 +150,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
                 for (int w = 0; w < kTileW; ++w) {
                   float tmp = 0;
                   for (int j = 0; j < kTileJ; ++j) {
-                    // #pragma unroll
-                    tmp += wt[j] * InImg[jj+j][h+p][w+q];
+                    tmp += wt[j] * inimg[jj+j][h+p][w+q];
                   }
                   C[h][w] += tmp;
                 }
