@@ -15,5 +15,5 @@ inline T max(T a, T b) { return a > b ? a : b; }
 
 #define kTileH (kOutImDim)
 #define kTileW (kOutImDim)
-#define kTileJ (4)
+#define kTileJ (8)
 
