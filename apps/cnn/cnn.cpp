@@ -3,7 +3,7 @@
 #include <vector>
 #include "cnn.h"
 
-void Mmap2Stream(tapa::mmap<const float_v16> mmap,
+void Mmap2Stream(tapa::mmap<float_v16> mmap,
                  tapa::ostream<float_v16>& stream,
                  uint64_t n) {
   for (uint64_t i = 0; i < (n + 15) / 16; ++i) {
@@ -181,9 +181,9 @@ void Timer(tapa::istream<uint64_t>& end_signal, tapa::mmap<uint64_t> cycle_count
   cycle_count[0] = count;
 }
 
-void Cnn(tapa::mmap<const float_v16> in_img,
-         tapa::mmap<const float_v16> weight,
-         tapa::mmap<const float_v16> bias,
+void Cnn(tapa::mmap<float_v16> in_img,
+         tapa::mmap<float_v16> weight,
+         tapa::mmap<float_v16> bias,
          tapa::mmap<float_v16> out_img,
          tapa::mmap<uint64_t> cycle_count) {
   tapa::stream<float_v16, 2> in_img_stream("in_img");
