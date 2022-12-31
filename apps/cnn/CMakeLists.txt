@@ -29,7 +29,7 @@ if(SDx_FOUND)
 
   add_custom_target(
     cnn-cosim
-    COMMAND $<TARGET_FILE:cnn> 20
+    COMMAND $<TARGET_FILE:cnn>
             --bitstream=$<TARGET_PROPERTY:${hw_emu_xclbin},FILE_NAME>
     DEPENDS cnn ${hw_emu_xclbin}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
