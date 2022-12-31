@@ -218,10 +218,10 @@ void Cnn(tapa::mmap<float_v16> in_img,
          tapa::mmap<float_v16> bias,
          tapa::mmap<float_v16> out_img,
          tapa::mmap<uint64_t> cycle_count) {
-  tapa::stream<float_v16, 2> in_img_stream("in_img");
-  tapa::stream<float_v16, 2> weight_stream("weight");
-  tapa::stream<float_v16, 2> bias_stream("bias");
-  tapa::stream<float_v16, 2> out_img_stream("out_img");
+  tapa::stream<float_v16, 8> in_img_stream("in_img");
+  tapa::stream<float_v16, 8> weight_stream("weight");
+  tapa::stream<float_v16, 8> bias_stream("bias");
+  tapa::stream<float_v16, 8> out_img_stream("out_img");
   tapa::stream<uint64_t, 2> end_signal_stream("end_signal");
   tapa::task()
     .invoke(Timer, end_signal_stream, cycle_count)
