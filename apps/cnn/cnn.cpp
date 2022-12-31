@@ -63,12 +63,11 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::istream<float_v16>& bias_stream,
            tapa::ostream<float_v16>& out_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
+
   static float Weight[kNum][kNum][kKernel][kKernel];
   #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
-  #pragma HLS array_partition variable=Weight dim=4 complete
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
-  #pragma HLS array_partition variable=InImg dim=1 cyclic factor=4
   #pragma HLS array_partition variable=InImg dim=3 complete
   static float OutImg[kNum][kOutImDim][kOutImDim];
   #pragma HLS array_partition variable=OutImg dim=3 complete
@@ -77,6 +76,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
   #pragma HLS array_partition variable=inimg dim=1 cyclic factor=4
   #pragma HLS array_partition variable=inimg dim=3 complete
   static float outimg[kNum][kTileH/2][kTileW/2];
+  #pragma HLS array_partition variable=outimg dim=3 complete
   static float C[kTileH][kTileW];
   #pragma HLS array_partition variable=C dim=2 complete
   float wt[kTileJ];
@@ -140,7 +140,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
             convolution_q:
             for (int q = 0; q < kKernel; ++q) {   
               #pragma pipeline II=1           
-              // float w = Weight[i][j][p][q];
               for (int j = 0; j < kTileJ; ++j) {
                 wt[j] = Weight[i][jj+j][p][q];
               }
