@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
-cmake_policy(SET CMP0076 NEW)
-if(POLICY CMP0111)
-  cmake_policy(SET CMP0111 NEW)
-endif()
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
 
 if(NOT PROJECT_NAME)
   project(tapa-apps-cnn)
