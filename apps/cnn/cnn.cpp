@@ -75,6 +75,7 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
 
   static float inimg[kNum][kTileH+kKernel-1][kTileW+kKernel-1];
   #pragma HLS array_partition variable=inimg dim=1 cyclic factor=4
+  #pragma HLS array_partition variable=inimg dim=2 cyclic factor=4
   #pragma HLS array_partition variable=inimg dim=3 complete
   static float outimg[kNum][kTileH/2][kTileW/2];
   static float C[kTileH][kTileW];
