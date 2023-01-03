@@ -1,12 +1,3 @@
-cmake_minimum_required(VERSION 3.3)
-if(COMMAND cmake_policy)
-  cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
-
-if(NOT PROJECT_NAME)
-  project(tapa-apps-cnn)
-endif()
-
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/apps.cmake)
 
 add_executable(cnn)
