@@ -65,21 +65,21 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
            tapa::ostream<uint64_t>& end_signal) {
   static float Weight[kNum][kNum][kKernel][kKernel];
   #pragma HLS array_partition variable=Weight dim=2 cyclic factor=4
-  #pragma HLS array_partition variable=Weight dim=4 complete
+  #pragma HLS array_partition variable=Weight dim=4 cyclic factor=4
   static float Bias[kNum];
   static float InImg[kNum][kInImDim][kInImDim];
   #pragma HLS array_partition variable=InImg dim=1 cyclic factor=4
-  #pragma HLS array_partition variable=InImg dim=3 complete
+  #pragma HLS array_partition variable=InImg dim=3 cyclic factor=4
   static float OutImg[kNum][kOutImDim][kOutImDim];
-  #pragma HLS array_partition variable=OutImg dim=3 complete
+  #pragma HLS array_partition variable=OutImg dim=3 cyclic factor=4
 
   static float inimg[kNum][kTileH+kKernel-1][kTileW+kKernel-1];
   #pragma HLS array_partition variable=inimg dim=1 cyclic factor=4
-  #pragma HLS array_partition variable=inimg dim=2 cyclic factor=4
-  #pragma HLS array_partition variable=inimg dim=3 complete
+  #pragma HLS array_partition variable=inimg dim=2 cyclic factor=2
+  #pragma HLS array_partition variable=inimg dim=3 cyclic factor=4
   static float outimg[kNum][kTileH/2][kTileW/2];
   static float C[kTileH][kTileW];
-  #pragma HLS array_partition variable=C dim=2 complete
+  #pragma HLS array_partition variable=C dim=2 cyclic factor=4
   float wt[kTileJ];
 
   read_bias:
@@ -140,7 +140,6 @@ void Convolution(tapa::istream<float_v16>& in_img_stream,
           for (int p = 0; p < kKernel; ++p) {
             convolution_q:
             for (int q = 0; q < kKernel; ++q) {              
-              // float w = Weight[i][j][p][q];
               for (int j = 0; j < kTileJ; ++j) {
                 #pragma HLS unroll
                 wt[j] = Weight[i][jj+j][p][q];
